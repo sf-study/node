@@ -261,4 +261,111 @@ npm 还有另一种不同的安装模式被成为全局模式，使用方法为�
 
 ####创建全局链接
 
-52
+npm提供了一个有趣的命令：npm link，他的功能是在本地包和全局包之间创建符号连接。通过全局安装的包不能通过require使用，但是通过npm link命令可以打破这一限制
+
+运行命令：npm link 包名，可以把全局包当作本地包来使用
+
+除此之外，使用该命令还可以将本地的包连接到全局，方法是：在package.json所在目录中运行npm link命令，如果我们要开发一个包，利用这种方法可以非常方便的在不同的工程之间进行测试
+
+####包的发布
+
+首先要让包符合npm的规范，npm有一套以CommonJS为基础的规范，但与CommonJS并不完全一致，其主要差别在于必填字段不同。
+
+通过npm init可以根据交互式问答创建一个符合标准的package.json
+
+创建一个名为firstmodule的目录，在目录中运行npm init，会出现下面的提示，可以根据提示先设置
+
+```txt
+name: (xinxinfirstmodule) '
+version: (1.0.0)
+description: xinxin first module
+entry point: (index.js)
+test command:
+git repository:
+keywords:
+author:
+license: (ISC)
+About to write to F:\WebstormProjects\node1\xinxinfirstmodule\package.json:
+
+{
+  "name": "'",
+  "version": "1.0.0",
+  "description": "xinxin first module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
+
+
+Is this ok? (yes)
+```
+
+这样就在firstmodule的目录中生成了一个符合npm规范的package.json文件，创建一个index.js作为包的接口，一个简单的包就制作完成
+
+在发布之前，还需要一个帐号用于以后维护自己的包，使用：npm adduser根据提示输入用户名，密码，邮箱，等待帐号创建完成，完成后可以使用npm whoami检测是否已经取得了帐号。
+
+接下来在package.json所在目录下运行npm publish，稍等片刻就可以完成发布了。打开浏览器访问http://search.npmjs.org/就可以找到自己刚刚发布的包。
+
+如果包将来要更新，只需要在package.json文件中修改version字段，然后重新使用npm publish发布就可以了。如果你对自己的包不满意，可以使用npm unpublish命令来取消发布
+
+###调试
+
+使用node.js内置的工具和第三方模块来进行单步调试
+
+####命令行调试
+
+node.js支持命令行下的单步调试，比如有一个js文件：debug.js
+
+```javascript
+var a = 1;
+var b = 'world';
+var c = function(x) {
+    console.log('hello ' + x + a);
+};
+c(b);
+```
+
+在命令行下执行 node debug debug.js，启动调试工具，这样就打开了一个node.js的调试终端，可以使用一些基本的命令进行单步跟踪调试
+
+nodejs调试命令：
+
+|命令|功能|
+|run|执行脚本，在第一行暂停|
+|restart|重新执行脚本|
+|cont,c|继续执行。直到遇到下一个断点|
+|next,n|单步执行|  
+|step,s|单步执行，并进入函数|
+|out,o|从函数中步出|
+|setBreakpoint(),sb()|在当前行设置断点|
+|setBreakpoint('f()'),sb(...)|在函数f的第一行设置断点|
+|setBreakpoint('script.js',20),sb(...)|在script.js的第20行设置断点|
+|clearBreakpoint,sb(...)|清除所有断点|
+|backtrace,bt|显示当前的调用栈|
+|list(5)|显示当前执行到的前后5行代码|
+|watch(expr)|把表达式expr加入监视列表|
+|unwatch(expr)|把表达式expr从监视列表移除|
+|watchers|显示监视列表中所有表达式和值|
+|repl|在当前上下文打开即时求值环境|
+|kill|终止当前执行的脚本|
+|scripts|显示当前以加载的所有脚本|
+|version|显示v8的版本|
+
+####远程调试
+
+V8提供的调试功能是基于TCP协议的，因此Node.js可以实现远程调试，在命令行下输入：
+
+	node --debug[=port] script.js
+	node --debug-brk[=port] script.js
+
+node --debug命令可以启动调试服务器，默认情况下，调试端口是5858，也可以使用--debug=1234指定调试端口号为1234，使用--debug命令运行脚本时，脚本会正常执行，但不会暂停，在执行过程中调试客户端可以连接到调试服务器，如果要求脚本暂停执行等待客户端连接，则应该使用--debug-brk选项，这时调试服务器在启动后会立刻暂停执行脚本，等待调试客户端连接
+
+当调试服务器启动以后，可以用命令行调试工具作为调试客户端连接
+
+####使用node-inspector调试node.js
+
+node-inspector是一个完全基于Node.js开源在线的调试工具
+
+使用方法：首先使用npm install -g node-inspector命令安装node-inspector，然后在终端中通过node --debug-brk=5858 debug.js命令连接你要除错的脚本的调试服务器
